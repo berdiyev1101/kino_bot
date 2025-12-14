@@ -4,7 +4,11 @@ from telegram.ext import (
     MessageHandler, filters, ContextTypes
 )
 import json
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # ================== Sozlamalar ==================
 ADMIN_IDS = [5795200638,7070532437]
@@ -190,7 +194,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ================== Asosiy ==================
 def main():
-    app = ApplicationBuilder().token("8592086953:AAFoqAyRDi6vY2NnZ6j2rw2G-D9hiVynu5A").build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT | filters.VIDEO, user_message))
