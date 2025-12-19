@@ -15,8 +15,7 @@ ADMIN_IDS = [5795200638, 7070532437]
 
 CHANNELS = [
     "asilmediauzb1",
-    "xebcof_movies",
-    "muhridd1n_channel"
+    "xebcof_movies"
 ]
 
 DATABASE = "movies.json"
@@ -40,16 +39,19 @@ def save_db(data):
     with open(DATABASE, "w") as f:
         json.dump(data, f, indent=4)
 
-# ================== Kanal tekshirish ==================
+# ================== BARCHA kanallarni tekshirish ==================
 async def is_member_of_channels(bot, user_id):
+    """
+    Foydalanuvchi BARCHA kanallarga a'zo bo'lsa True qaytaradi
+    """
     for channel in CHANNELS:
         try:
             member = await bot.get_chat_member(f"@{channel}", user_id)
-            if member.status in ("member", "administrator", "creator"):
-                return True
+            if member.status not in ("member", "administrator", "creator"):
+                return False
         except:
-            continue
-    return False
+            return False
+    return True
 
 # ================== Menyular ==================
 def get_user_menu(is_member: bool):
@@ -58,15 +60,17 @@ def get_user_menu(is_member: bool):
             [InlineKeyboardButton("🎬 Kino qidirish", callback_data="get_movie")]
         ])
     else:
-        buttons = [[
-            InlineKeyboardButton(
-                f"📢 @{ch}", url=f"https://t.me/{ch}"
-            )
-        ] for ch in CHANNELS]
+        buttons = []
+        for ch in CHANNELS:
+            buttons.append([
+                InlineKeyboardButton(
+                    f"📢 @{ch}", url=f"https://t.me/{ch}"
+                )
+            ])
 
-        buttons.append(
-            [InlineKeyboardButton("✔️ A’zolikni tekshirish", callback_data="check_sub")]
-        )
+        buttons.append([
+            InlineKeyboardButton("✔️ A’zolikni tekshirish", callback_data="check_sub")
+        ])
 
         return InlineKeyboardMarkup(buttons)
 
@@ -106,7 +110,7 @@ async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.edit_message_text("🔑 Kino kodi yuboring:")
     else:
         await query.edit_message_text(
-            "❌ Siz hali kanallarga a’zo emassiz!",
+            "❌ Avval BARCHA kanallarga a’zo bo‘ling!",
             reply_markup=get_user_menu(False)
         )
 
@@ -125,7 +129,10 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         context.user_data["awaiting_code"] = False
         is_member = await is_member_of_channels(context.bot, user_id)
-        await update.message.reply_text("Menyu:", reply_markup=get_user_menu(is_member))
+        await update.message.reply_text(
+            "Menyu:",
+            reply_markup=get_user_menu(is_member)
+        )
         return
 
     # -------- Admin video --------
@@ -196,7 +203,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db = load_db()
         text = "🎬 Kino ro‘yxati:\n" + "\n".join(db.keys()) if db else "🎬 Kino yo‘q."
         await query.edit_message_text(text)
-        await update.effective_message.reply_text("Admin panel:", reply_markup=get_admin_menu())
+        await update.effective_message.reply_text(
+            "Admin panel:",
+            reply_markup=get_admin_menu()
+        )
         return
 
     if query.data == "delete_movie":
