@@ -94,7 +94,7 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_video(db[code])
         else:
             await update.message.reply_text("❌ Kod topilmadi.")
-        context.user_data["awaiting_code"] = 
+        context.user_data["awaiting_code"] = False
         chat_member = await context.bot.get_chat_member(f"@{CHANNEL_USERNAME}", user_id)
         is_member = chat_member.status in ("member", "administrator", "creator")
         await update.message.reply_text("Menyu:", reply_markup=get_user_menu(is_member))
@@ -188,4 +188,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
