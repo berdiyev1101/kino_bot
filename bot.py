@@ -10,12 +10,10 @@ import os
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# ================== Sozlamalar ==================
 ADMIN_IDS = [5795200638,7070532437]
-CHANNEL_USERNAME = "muhridd1n_channel"
+CHANNEL_USERNAME = ["muhridd1n_channel","asilmediauzb1","xebcof_movies"]
 DATABASE = "movies.json"
 
-# ================== JSON baza yuklash/saqlash ==================
 def load_db():
     if not os.path.exists(DATABASE):
         with open(DATABASE, "w") as f:
@@ -36,7 +34,6 @@ def save_db(data):
     with open(DATABASE, "w") as f:
         json.dump(data, f, indent=4)
 
-# ================== Menyular ==================
 def get_user_menu(is_member: bool):
     """User menyusi: a’zo bo‘lsa kino qidirish, bo‘lmasa azo va tekshirish"""
     if is_member:
@@ -56,7 +53,6 @@ def get_admin_menu():
         [InlineKeyboardButton("❌ Kino o‘chirish", callback_data="delete_movie")]
     ])
 
-# ================== /start ==================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
@@ -73,7 +69,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=get_user_menu(is_member)
         )
 
-# ================== Kanal obuna tekshirish ==================
 async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -88,7 +83,6 @@ async def check_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await query.edit_message_text("❌ Siz hali kanalga a'zo emassiz!",
                                       reply_markup=get_user_menu(False))
 
-# ================== Xabarlarni ishlash ==================
 async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = load_db()
     user_id = update.effective_user.id
@@ -100,15 +94,12 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_video(db[code])
         else:
             await update.message.reply_text("❌ Kod topilmadi.")
-        context.user_data["awaiting_code"] = False
-
-        # Kanal a’zo bo‘lganini tekshirish va menyuni ko‘rsatish
+        context.user_data["awaiting_code"] = 
         chat_member = await context.bot.get_chat_member(f"@{CHANNEL_USERNAME}", user_id)
         is_member = chat_member.status in ("member", "administrator", "creator")
         await update.message.reply_text("Menyu:", reply_markup=get_user_menu(is_member))
         return
 
-    # -------- Admin video yuklamoqda --------
     if context.user_data.get("adding_movie"):
         if update.message.video:
             context.user_data["file_id"] = update.message.video.file_id
@@ -119,7 +110,6 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ Iltimos, faqat video yuboring!")
         return
 
-    # -------- Admin kodi yuboradi --------
     if context.user_data.get("waiting_code"):
         code = update.message.text.strip()
         file_id = context.user_data["file_id"]
@@ -133,7 +123,6 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Admin panel:", reply_markup=get_admin_menu())
         return
 
-    # -------- Admin o‘chirish kodi --------
     if context.user_data.get("deleting"):
         code = update.message.text.strip()
         if code in db:
@@ -146,13 +135,11 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Admin panel:", reply_markup=get_admin_menu())
         return
 
-# ================== Tugmalar ==================
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     user_id = query.from_user.id
 
-    # -------- User kino oladi --------
     if query.data == "get_movie":
         await query.edit_message_text("🔑 Kino kodini yuboring:")
         context.user_data["awaiting_code"] = True
@@ -162,7 +149,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await check_subscription(update, context)
         return
 
-    # -------- Admin tugmalar --------
     if user_id not in ADMIN_IDS:
         await query.edit_message_text("❌ Faqat adminlar uchun.")
         return
@@ -192,7 +178,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["deleting"] = True
         return
 
-# ================== Asosiy ==================
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -203,3 +188,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
